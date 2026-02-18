@@ -1,0 +1,70 @@
+﻿# generated: 2026-02-18
+# project: skaild2
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: /home/mmollin/skaild2/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-18
+project: skaild2
+project_key: NOKEY
+tracking_system: file-system
+story_location: /home/mmollin/skaild2/_bmad-output/implementation-artifacts
+
+development_status:
+	epic-1: in-progress
+	1-0-initial-project-setup-from-starter-templates: ready-for-dev
+	1-1-single-host-compose-deployment-with-first-admin-login: backlog
+	epic-1-retrospective: optional
+
+	epic-2: backlog
+	2-1-register-first-upstream-application: backlog
+	2-2-define-basic-route-and-access-mode: backlog
+	2-3-connection-test-for-routes: backlog
+	epic-2-retrospective: optional
+
+	epic-3: backlog
+	3-1-define-global-roles-and-map-idp-claims: backlog
+	3-2-require-role-based-access-for-a-route: backlog
+	3-3-policy-preview-for-a-route-and-secure-defaults: backlog
+	epic-3-retrospective: optional
+
+	epic-4: backlog
+	4-1-per-application-access-activity-view: backlog
+	4-2-failed-auth-authorization-overview: backlog
+	4-3-basic-health-and-log-export-for-integration: backlog
+	epic-4-retrospective: optional
+
+	epic-5: backlog
+	5-1-multi-instance-proxy-with-shared-sessions-on-single-host: backlog
+	5-2-configuration-backup-and-restore: backlog
+	5-3-basic-admin-audit-trail-and-governance: backlog
+	epic-5-retrospective: optional

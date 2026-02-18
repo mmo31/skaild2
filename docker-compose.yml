@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  gateway:
+    image: ghcr.io/your-org/skaild2-gateway:dev
+    depends_on:
+      - control-plane
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=info
+      - SKAILD2_CONTROL_PLANE_URL=http://control-plane:8080
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    volumes:
+      - gateway-certs:/var/lib/skaild2/certs
+    networks:
+      - skaild2-net
+
+  control-plane:
+    image: ghcr.io/your-org/skaild2-control-plane:dev
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=info
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    networks:
+      - skaild2-net
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=skaild2
+      - POSTGRES_USER=skaild2
+      - POSTGRES_PASSWORD=skaild2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - skaild2-net
+
+  # Optional: one-shot migrator container
+  migrator:
+    image: ghcr.io/your-org/skaild2-control-plane:dev
+    depends_on:
+      - postgres
+    command: ["/app/migrate"]
+    env_file:
+      - .env
+    environment:
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    networks:
+      - skaild2-net
+    restart: "no"
+
+volumes:
+  pgdata:
+  gateway-certs:
+
+networks:
+  skaild2-net:
+    driver: bridge
