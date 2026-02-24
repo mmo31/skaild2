@@ -95,21 +95,30 @@ Example usage:
 ## Visual Language: Mermaidcore
 
 - Mode: default dark, calm/professional with a subtle magical shimmer.
-- Background: deep ocean gradient from midnight blue to near-black teal.
-- Surfaces: glassmorphic panels with transparency and strong blur, floating over the ocean.
+- Background: custom branded background image (`skaild-background.png`) with no overlay, displayed as cover with fixed attachment for depth.
+- Surfaces: glassmorphic panels with transparency and strong blur, floating over the background image.
 - Accents: iridescent aqua, soft teal, pearlescent purple and silver used in gradients and outlines.
+- Typography: 
+  - Page titles and branding: dark text (#1E293B) for strong contrast
+  - Navigation: white text on dark slate backgrounds for consistent visibility
+  - Card content: lighter slate tones (slate-200/300) for improved readability
 
 ### Design Tokens (v1)
 
 - Colors
-  - `bg-ocean-deep`: #020617 → #04101F (gradient background)
+  - `bg-ocean-deep`: Custom background image (skaild-background.png)
   - `surface-glass`: rgba(15, 23, 42, 0.55) with backdrop blur
   - `accent-aqua`: #4FD1C5
   - `accent-teal`: #14B8A6
   - `accent-lilac`: #A855F7
   - `accent-silver`: #E5E7EB
-  - `text-primary`: #F9FAFB
+  - `text-primary`: #F9FAFB (white/bright)
+  - `text-dark`: #1E293B (dark slate for titles)
   - `text-muted`: #9CA3AF
+  - `text-light`: #E2E8F0 (slate-200)
+  - `text-card`: #CBD5E1 (slate-300)
+  - `nav-bg`: rgba(30, 41, 55, 0.8) (slate-800/80)
+  - `nav-bg-hover`: rgba(51, 65, 85, 0.8) (slate-700/80)
   - `danger-coral`: #FB7185
   - `warn-amber`: #FBBF24
 
@@ -145,6 +154,9 @@ Use these as a base theme, e.g. in `:root` or `[data-theme="dark"]`:
   /* Text */
   --color-text-primary: #F9FAFB;
   --color-text-muted: #9CA3AF;
+  --color-text-dark: #1E293B;
+  --color-text-light: #E2E8F0;
+  --color-text-nav: #CBD5E1;
 
   /* Status */
   --color-danger-coral: #FB7185;
@@ -209,10 +221,18 @@ Use these as a base theme, e.g. in `:root` or `[data-theme="dark"]`:
 
 ### Key Screen: Admin Dashboard (Concept)
 
-- Background layer: full viewport ocean gradient using `bg-ocean-deep`.
-- Top bar: translucent glass strip with logo/wordmark on the left, compact status indicators and user menu on the right.
-- Left rail: slim navigation with icon + label for core areas (Dashboard, Routes, Identity, Certificates, Settings) using aqua/silver line icons.
-- Main content: central glass panels for “Quick status” (health of proxies, certs, SSO), “Recent changes”, and “Active sessions / sign-ins”.
-- Primary CTAs: Mermaidcore primary buttons for "Add Route", "Connect IdP", and "Issue Certificate", placed in prominent but not overwhelming positions.
-- Feedback: warnings use warn-amber on glass panels; errors use danger-coral, always legible against dark mode.
+- Background layer: full viewport with custom background image (`skaild-background.png`), no overlay gradient to preserve image clarity
+  - Background styling: `background-size: cover`, `background-position: center`, `background-attachment: fixed` for parallax effect
+- Top bar: translucent glass strip with logo/wordmark on the left, compact status indicators and user menu on the right
+  - Logo/titles: dark text (`#1E293B`) without background boxes for clean appearance
+- Left rail: slim navigation with icon + label for core areas (Dashboard, Routes, Identity, Certificates, Settings)
+  - Navigation items: white text on dark slate-800/80 background boxes (always visible)
+  - Hover state: slightly lighter background (slate-700/80) with dimmer text (slate-300)
+  - Uses aqua/silver line icons
+- Main content: central glass panels for "Quick status" (health of proxies, certs, SSO), "Recent changes", and "Active sessions / sign-ins"
+  - Card headings: bright slate-200 text for visibility
+  - Card body text: slate-300 for improved readability against background
+  - Glass panels maintain original glassmorphic effect with backdrop blur
+- Primary CTAs: Mermaidcore primary buttons for "Add Route", "Connect IdP", and "Issue Certificate", placed in prominent but not overwhelming positions
+- Feedback: warnings use warn-amber on glass panels; errors use danger-coral, always legible against dark mode
 

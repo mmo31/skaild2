@@ -1,4 +1,4 @@
-﻿# generated: 2026-02-18
+﻿﻿# generated: 2026-02-18
 # project: skaild2
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,8 @@ story_location: /home/mmollin/skaild2/_bmad-output/implementation-artifacts
 
 development_status:
 	epic-1: in-progress
-	1-0-initial-project-setup-from-starter-templates: ready-for-dev
+	# updated by code-review workflow on 2026-02-24
+	1-0-initial-project-setup-from-starter-templates: done
 	1-1-single-host-compose-deployment-with-first-admin-login: backlog
 	epic-1-retrospective: optional
 

@@ -1,0 +1,68 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: crates/gateway/Dockerfile
+    depends_on:
+      - control-plane
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=info
+      - SKAILD2_CONTROL_PLANE_URL=http://control-plane:8080
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    volumes:
+      - gateway-certs:/var/lib/skaild2/certs
+    networks:
+      - skaild2-net
+    restart: unless-stopped
+
+  control-plane:
+    build:
+      context: .
+      dockerfile: crates/control-plane/Dockerfile
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=info
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    networks:
+      - skaild2-net
+    restart: unless-stopped
+
+  admin-ui:
+    build:
+      context: ./admin-ui
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:3000:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - skaild2-net
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=skaild2
+      - POSTGRES_USER=skaild2
+      - POSTGRES_PASSWORD=skaild2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - skaild2-net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  gateway-certs:
+
+networks:
+  skaild2-net:
+    driver: bridge

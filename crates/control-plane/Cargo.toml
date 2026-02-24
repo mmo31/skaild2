@@ -1,0 +1,9 @@
+[package]
+name = "control-plane"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shared = { path = "../shared" }
+tokio = { version = "1.35", features = ["full"] }
+axum = "0.7"

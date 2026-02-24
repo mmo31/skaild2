@@ -1,12 +1,16 @@
-version: "3.9"
+# NOTE: Use docker-compose.dev.yml for development or docker-compose.prod.yml for production
+# Development: docker compose -f docker-compose.dev.yml up
+# Production:  docker compose -f docker-compose.prod.yml up
 
 services:
   gateway:
-    image: ghcr.io/your-org/skaild2-gateway:dev
+    build:
+      context: .
+      dockerfile: crates/gateway/Dockerfile
     depends_on:
       - control-plane
     ports:
-      - "80:80"
+      - "0.0.0.0:80:80"
       - "443:443"
     env_file:
       - .env
@@ -20,9 +24,12 @@ services:
       - skaild2-net
 
   control-plane:
-    image: ghcr.io/your-org/skaild2-control-plane:dev
+    build:
+      context: .
+      dockerfile: crates/control-plane/Dockerfile
     depends_on:
       - postgres
+    # Note: Control plane is not exposed publicly - access via gateway or use dev/prod compose files
     env_file:
       - .env
     environment:
@@ -42,19 +49,21 @@ services:
     networks:
       - skaild2-net
 
-  # Optional: one-shot migrator container
-  migrator:
-    image: ghcr.io/your-org/skaild2-control-plane:dev
-    depends_on:
-      - postgres
-    command: ["/app/migrate"]
-    env_file:
-      - .env
-    environment:
-      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
-    networks:
-      - skaild2-net
-    restart: "no"
+  # Optional: one-shot migrator container (disabled - no migrations implemented yet)
+  # migrator:
+  #   build:
+  #     context: .
+  #     dockerfile: crates/control-plane/Dockerfile
+  #   depends_on:
+  #     - postgres
+  #   command: ["/app/migrate"]
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+  #   networks:
+  #     - skaild2-net
+  #   restart: "no"
 
 volumes:
   pgdata:

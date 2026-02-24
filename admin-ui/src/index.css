@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root[data-theme='mermaidcore-dark'] {
+  /* Base background */
+  --color-bg-ocean-deep-top: #020617;
+  --color-bg-ocean-deep-bottom: #04101F;
+
+  /* Surfaces */
+  --color-surface-glass: rgba(15, 23, 42, 0.55);
+  --border-surface-glass: 1px solid rgba(148, 163, 184, 0.5);
+  --blur-surface-glass: 18px;
+
+  /* Accents */
+  --color-accent-aqua: #4fd1c5;
+  --color-accent-teal: #14b8a6;
+  --color-accent-lilac: #a855f7;
+  --color-accent-silver: #e5e7eb;
+
+  /* Text */
+  --color-text-primary: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-text-dark: #1e293b;
+  --color-text-light: #e2e8f0;
+  --color-text-nav: #cbd5e1;
+
+  /* Status */
+  --color-danger-coral: #fb7185;
+  --color-warn-amber: #fbbf24;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #4fd1c5 0%, #a855f7 60%, #e5e7eb 100%);
+
+  /* Effects */
+  --shadow-primary-glow: 0 0 24px rgba(79, 209, 197, 0.35);
+  --ring-focus: 0 0 0 2px #4fd1c5;
+
+  /* Radii */
+  --radius-button: 999px;
+  --radius-card: 18px;
+
+  /* Spacing */
+  --space-card-padding: 1.25rem;
+  --space-section-gap: 1.5rem;
+}
+
+.mc-surface {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(var(--blur-surface-glass));
+  border: var(--border-surface-glass);
+  border-radius: var(--radius-card);
+}
+
+.bg-mc-ocean {
+  background-image: url(/skaild-background.png);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.mc-button-primary {
+  border-radius: var(--radius-button);
+  background-image: var(--gradient-primary);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-primary-glow);
+}
+
+.mc-button-secondary {
+  border-radius: var(--radius-button);
+  background-color: rgba(15, 118, 110, 0.18);
+  border: 1px solid rgba(20, 184, 166, 0.7);
+  color: var(--color-text-primary);
+}

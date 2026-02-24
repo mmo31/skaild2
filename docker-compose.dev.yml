@@ -1,0 +1,72 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: crates/gateway/Dockerfile
+    depends_on:
+      - control-plane
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=debug
+      - SKAILD2_CONTROL_PLANE_URL=http://control-plane:8080
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    volumes:
+      - gateway-certs:/var/lib/skaild2/certs
+    networks:
+      - skaild2-net
+
+  control-plane:
+    build:
+      context: .
+      dockerfile: crates/control-plane/Dockerfile
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - RUST_LOG=debug
+      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+    networks:
+      - skaild2-net
+
+  admin-ui:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "0.0.0.0:5173:5173"
+    volumes:
+      - ./admin-ui:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080
+    networks:
+      - skaild2-net
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=skaild2
+      - POSTGRES_USER=skaild2
+      - POSTGRES_PASSWORD=skaild2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - skaild2-net
+    ports:
+      - "0.0.0.0:5432:5432"
+
+volumes:
+  pgdata:
+  gateway-certs:
+
+networks:
+  skaild2-net:
+    driver: bridge
