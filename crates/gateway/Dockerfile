@@ -1,13 +1,12 @@
 # Build stage
-FROM rust:1.75-slim as builder
+FROM rust:slim AS builder
 
 WORKDIR /app
 
-# Copy workspace files
+# Copy all source files
 COPY Cargo.toml ./
-COPY crates/shared crates/shared
-COPY crates/gateway crates/gateway
-COPY crates/control-plane crates/control-plane
+COPY migrations migrations
+COPY crates crates
 
 # Build the gateway binary
 RUN cargo build --release -p gateway

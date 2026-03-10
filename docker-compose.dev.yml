@@ -1,4 +1,16 @@
 services:
+  redis:
+    image: redis:7-alpine
+    networks:
+      - skaild2-net
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   gateway:
     build:
       context: .
@@ -13,7 +25,7 @@ services:
     environment:
       - RUST_LOG=debug
       - SKAILD2_CONTROL_PLANE_URL=http://control-plane:8080
-      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+      - DATABASE_URL=postgres://skaild2:skaild2_dev_password@postgres:5432/skaild2
     volumes:
       - gateway-certs:/var/lib/skaild2/certs
     networks:
@@ -24,12 +36,18 @@ services:
       context: .
       dockerfile: crates/control-plane/Dockerfile
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "0.0.0.0:8080:8080"
     env_file:
       - .env
     environment:
       - RUST_LOG=debug
-      - SKAILD2_DB_URL=postgres://skaild2:skaild2@postgres:5432/skaild2
+      - DATABASE_URL=postgres://skaild2:skaild2_dev_password@postgres:5432/skaild2
+      - REDIS_URL=redis://redis:6379
     networks:
       - skaild2-net
 
@@ -55,16 +73,22 @@ services:
     environment:
       - POSTGRES_DB=skaild2
       - POSTGRES_USER=skaild2
-      - POSTGRES_PASSWORD=skaild2
+      - POSTGRES_PASSWORD=skaild2_dev_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - skaild2-net
     ports:
       - "0.0.0.0:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skaild2"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   pgdata:
+  redis-data:
   gateway-certs:
 
 networks:

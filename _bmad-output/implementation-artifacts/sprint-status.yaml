@@ -1,4 +1,4 @@
-﻿﻿# generated: 2026-02-18
+﻿﻿﻿# generated: 2026-02-18
 # project: skaild2
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,11 +43,11 @@ development_status:
 	epic-1: in-progress
 	# updated by code-review workflow on 2026-02-24
 	1-0-initial-project-setup-from-starter-templates: done
-	1-1-single-host-compose-deployment-with-first-admin-login: backlog
+	1-1-single-host-compose-deployment-with-first-admin-login: review
 	epic-1-retrospective: optional
 
-	epic-2: backlog
-	2-1-register-first-upstream-application: backlog
+	epic-2: in-progress
+	2-1-register-first-upstream-application: ready-for-dev
 	2-2-define-basic-route-and-access-mode: backlog
 	2-3-connection-test-for-routes: backlog
 	epic-2-retrospective: optional
