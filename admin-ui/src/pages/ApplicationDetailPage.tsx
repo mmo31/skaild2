@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Application, getApplications, updateApplication } from '../services/api';
+import {
+  Application,
+  Route,
+  CreateRouteInput,
+  getApplications,
+  updateApplication,
+  getRoutes,
+  createRoute,
+} from '../services/api';
 import { ApplicationForm } from '../components/ApplicationForm';
+import { RouteForm } from '../components/RouteForm';
 
 export const ApplicationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +22,13 @@ export const ApplicationDetailPage: React.FC = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [routesLoading, setRoutesLoading] = useState(true);
+  const [routesError, setRoutesError] = useState('');
+  const [addingRoute, setAddingRoute] = useState(false);
+  const [addRouteLoading, setAddRouteLoading] = useState(false);
+  const [addRouteError, setAddRouteError] = useState('');
+
   useEffect(() => {
     // Fetch by id from the list endpoint (no single GET added to api.ts per story scope)
     getApplications()
@@ -23,6 +39,14 @@ export const ApplicationDetailPage: React.FC = () => {
       })
       .catch(() => setFetchError('Failed to load application'))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    getRoutes(id)
+      .then(setRoutes)
+      .catch(() => setRoutesError('Failed to load routes'))
+      .finally(() => setRoutesLoading(false));
   }, [id]);
 
   const handleUpdate = async (data: { name?: string; upstream_url?: string; hostname?: string }) => {
@@ -37,6 +61,22 @@ export const ApplicationDetailPage: React.FC = () => {
       setFormError(err.response?.data?.error || 'Failed to update application');
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleAddRoute = async (data: CreateRouteInput) => {
+    if (!id) return;
+    setAddRouteLoading(true);
+    setAddRouteError('');
+    try {
+      const newRoute = await createRoute(id, data);
+      setRoutes((prev) => [...prev, newRoute]);
+      setAddingRoute(false);
+    } catch (err: any) {
+      setAddRouteError(err.response?.data?.error || 'Failed to create route');
+      throw err;
+    } finally {
+      setAddRouteLoading(false);
     }
   };
 
@@ -109,6 +149,79 @@ export const ApplicationDetailPage: React.FC = () => {
               </button>
             </div>
           </>
+        )}
+      </div>
+
+      {/* Routes section */}
+      <div className="mc-surface p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-100">Routes</h2>
+          {!addingRoute && (
+            <button
+              onClick={() => { setAddingRoute(true); setAddRouteError(''); }}
+              className="mc-button-primary px-3 py-1.5 text-xs"
+            >
+              + Add Route
+            </button>
+          )}
+        </div>
+
+        {addingRoute && (
+          <div className="border border-slate-600/50 rounded-lg p-4 bg-slate-800/30">
+            <h3 className="text-sm font-medium text-slate-300 mb-3">New Route</h3>
+            <RouteForm
+              applicationHostname={application.hostname}
+              onSubmit={handleAddRoute}
+              onCancel={() => { setAddingRoute(false); setAddRouteError(''); }}
+              loading={addRouteLoading}
+              error={addRouteError}
+            />
+          </div>
+        )}
+
+        {routesLoading ? (
+          <p className="text-slate-400 text-sm">Loading routes…</p>
+        ) : routesError ? (
+          <p className="text-red-400 text-sm">{routesError}</p>
+        ) : routes.length === 0 ? (
+          <p className="text-slate-500 text-sm">No routes yet. Add your first one.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-slate-400 uppercase tracking-wide border-b border-slate-700">
+                <th className="pb-2 pr-4">Host</th>
+                <th className="pb-2 pr-4">Path Prefix</th>
+                <th className="pb-2 pr-4">Access Mode</th>
+                <th className="pb-2">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700/50">
+              {routes.map((route) => (
+                <tr key={route.id}>
+                  <td className="py-2.5 pr-4 font-mono text-slate-200">{route.host}</td>
+                  <td className="py-2.5 pr-4 font-mono text-slate-300">{route.path_prefix}</td>
+                  <td className="py-2.5 pr-4">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      route.access_mode === 'public'
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {route.access_mode === 'public' ? 'Public' : 'Login required'}
+                    </span>
+                  </td>
+                  <td className="py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      route.enabled
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-slate-500/20 text-slate-400'
+                    }`}>
+                      {route.enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

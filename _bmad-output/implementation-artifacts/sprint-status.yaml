@@ -48,7 +48,8 @@ development_status:
 
 	epic-2: in-progress
 	2-1-register-first-upstream-application: done
-	2-2-define-basic-route-and-access-mode: backlog
+	# updated by code-review workflow on 2026-03-10
+	2-2-define-basic-route-and-access-mode: done
 	2-3-connection-test-for-routes: backlog
 	epic-2-retrospective: optional
 

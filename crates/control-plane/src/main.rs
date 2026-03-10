@@ -103,6 +103,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Application endpoints
         .route("/api/applications", get(api::list_applications).post(api::create_application))
         .route("/api/applications/:id", get(api::get_application).put(api::update_application))
+        // Route endpoints
+        .route("/api/applications/:app_id/routes", get(api::list_routes).post(api::create_route))
+        .route("/api/routes/:id", get(api::get_route).put(api::update_route))
+        // Internal gateway endpoint (no auth)
+        .route("/api/internal/routes", get(api::get_internal_routes))
         .layer(cors)
         .layer(session_layer)
         .with_state(app_state);

@@ -106,4 +106,45 @@ export const updateApplication = async (id: string, data: UpdateApplicationInput
   return response.data;
 };
 
+// Routes API
+
+export interface Route {
+  id: string;
+  application_id: string;
+  host: string;
+  path_prefix: string;
+  access_mode: 'public' | 'login_required';
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateRouteInput {
+  host: string;
+  path_prefix?: string;
+  access_mode: 'public' | 'login_required';
+}
+
+export interface UpdateRouteInput {
+  host?: string;
+  path_prefix?: string;
+  access_mode?: 'public' | 'login_required';
+  enabled?: boolean;
+}
+
+export const getRoutes = async (appId: string): Promise<Route[]> => {
+  const response = await api.get<Route[]>(`/api/applications/${appId}/routes`);
+  return response.data;
+};
+
+export const createRoute = async (appId: string, data: CreateRouteInput): Promise<Route> => {
+  const response = await api.post<Route>(`/api/applications/${appId}/routes`, data);
+  return response.data;
+};
+
+export const updateRoute = async (id: string, data: UpdateRouteInput): Promise<Route> => {
+  const response = await api.put<Route>(`/api/routes/${id}`, data);
+  return response.data;
+};
+
 export default api;

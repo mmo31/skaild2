@@ -1,4 +1,4 @@
-use shared::ApplicationError;
+use shared::{ApplicationError, RouteError};
 use axum::{
     extract::State,
     http::StatusCode,
@@ -97,6 +97,7 @@ pub async fn create_first_admin(
 pub enum AppError {
     AdminError(AdminError),
     ApplicationError(ApplicationError),
+    RouteError(RouteError),
     DatabaseError(String),
     SetupAlreadyComplete,
     SessionError(String),
@@ -112,6 +113,12 @@ impl From<AdminError> for AppError {
 impl From<ApplicationError> for AppError {
     fn from(err: ApplicationError) -> Self {
         AppError::ApplicationError(err)
+    }
+}
+
+impl From<RouteError> for AppError {
+    fn from(err: RouteError) -> Self {
+        AppError::RouteError(err)
     }
 }
 
@@ -158,6 +165,24 @@ impl IntoResponse for AppError {
                 (StatusCode::NOT_FOUND, "Application not found")
             }
             AppError::ApplicationError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+            }
+            AppError::RouteError(RouteError::HostRequired) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, "Host is required")
+            }
+            AppError::RouteError(RouteError::ApplicationNotFound) => {
+                (StatusCode::NOT_FOUND, "Application not found")
+            }
+            AppError::RouteError(RouteError::NotFound) => {
+                (StatusCode::NOT_FOUND, "Route not found")
+            }
+            AppError::RouteError(RouteError::DuplicateHostPath) => {
+                (StatusCode::CONFLICT, "Route with this host and path already exists")
+            }
+            AppError::RouteError(RouteError::InvalidAccessMode(_)) => {
+                (StatusCode::BAD_REQUEST, "Invalid access mode")
+            }
+            AppError::RouteError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
             }
             AppError::DatabaseError(_) => {
