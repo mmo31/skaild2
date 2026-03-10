@@ -47,7 +47,7 @@ development_status:
 	epic-1-retrospective: optional
 
 	epic-2: in-progress
-	2-1-register-first-upstream-application: ready-for-dev
+	2-1-register-first-upstream-application: done
 	2-2-define-basic-route-and-access-mode: backlog
 	2-3-connection-test-for-routes: backlog
 	epic-2-retrospective: optional

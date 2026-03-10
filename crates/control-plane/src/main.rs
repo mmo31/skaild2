@@ -100,6 +100,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/auth/login", post(api::login))
         .route("/api/auth/logout", post(api::logout))
         .route("/api/auth/me", get(api::me))
+        // Application endpoints
+        .route("/api/applications", get(api::list_applications).post(api::create_application))
+        .route("/api/applications/:id", get(api::get_application).put(api::update_application))
         .layer(cors)
         .layer(session_layer)
         .with_state(app_state);

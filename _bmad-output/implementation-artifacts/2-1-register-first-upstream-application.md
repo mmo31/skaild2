@@ -1,6 +1,6 @@
 # Story 2.1: Register First Upstream Application
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,49 +20,49 @@ so that skaild2 knows where to send proxied traffic for that application.
 
 ## Tasks / Subtasks
 
-- [ ] Add database migration for applications table (AC: 2, 3)
-  - [ ] Create `20260309000001_create_applications.sql` in `migrations/`
-  - [ ] Define `applications` table: id, name, upstream_url, hostname, enabled, created_at, updated_at
-  - [ ] Add unique constraint on hostname
+- [x] Add database migration for applications table (AC: 2, 3)
+  - [x] Create `20260309000001_create_applications.sql` in `migrations/`
+  - [x] Define `applications` table: id, name, upstream_url, hostname, enabled, created_at, updated_at
+  - [x] Add unique constraint on hostname
 
-- [ ] Implement Application model and persistence in shared crate (AC: 2, 3, 4)
-  - [ ] Create `crates/shared/src/models/application.rs` with `Application` struct (sqlx `FromRow`, Serialize, Deserialize)
-  - [ ] Add `CreateApplicationInput` and `UpdateApplicationInput` structs
-  - [ ] Implement `create_application()` async fn with URL and hostname validation
-  - [ ] Implement `list_applications()` async fn
-  - [ ] Implement `get_application_by_id()` async fn
-  - [ ] Implement `update_application()` async fn
-  - [ ] Add `ApplicationError` enum (thiserror)
-  - [ ] Register `application` module in `shared/src/models/mod.rs`
-  - [ ] Add unit tests for validation logic
+- [x] Implement Application model and persistence in shared crate (AC: 2, 3, 4)
+  - [x] Create `crates/shared/src/models/application.rs` with `Application` struct (sqlx `FromRow`, Serialize, Deserialize)
+  - [x] Add `CreateApplicationInput` and `UpdateApplicationInput` structs
+  - [x] Implement `create_application()` async fn with URL and hostname validation
+  - [x] Implement `list_applications()` async fn
+  - [x] Implement `get_application_by_id()` async fn
+  - [x] Implement `update_application()` async fn
+  - [x] Add `ApplicationError` enum (thiserror)
+  - [x] Register `application` module in `shared/src/models/mod.rs`
+  - [x] Add unit tests for validation logic
 
-- [ ] Build control-plane API endpoints (AC: 1, 2, 3, 4)
-  - [ ] Create `crates/control-plane/src/api/applications.rs`
-  - [ ] `POST /api/applications` — create a new application (auth required)
-  - [ ] `GET /api/applications` — list all applications (auth required)
-  - [ ] `GET /api/applications/:id` — get a single application (auth required)
-  - [ ] `PUT /api/applications/:id` — update name, upstream_url, or hostname (auth required)
-  - [ ] Add `ApplicationError` to control-plane `AppError` mapping
-  - [ ] Export new handlers from `api/mod.rs`
-  - [ ] Register routes in `main.rs`
+- [x] Build control-plane API endpoints (AC: 1, 2, 3, 4)
+  - [x] Create `crates/control-plane/src/api/applications.rs`
+  - [x] `POST /api/applications` — create a new application (auth required)
+  - [x] `GET /api/applications` — list all applications (auth required)
+  - [x] `GET /api/applications/:id` — get a single application (auth required)
+  - [x] `PUT /api/applications/:id` — update name, upstream_url, or hostname (auth required)
+  - [x] Add `ApplicationError` to control-plane `AppError` mapping
+  - [x] Export new handlers from `api/mod.rs`
+  - [x] Register routes in `main.rs`
 
-- [ ] Build Applications UI (AC: 1, 2, 3, 4)
-  - [ ] Add `getApplications()`, `createApplication()`, `updateApplication()` to `admin-ui/src/services/api.ts`
-  - [ ] Create `admin-ui/src/pages/ApplicationsPage.tsx` — list with "Add Application" CTA
-  - [ ] Create `admin-ui/src/pages/ApplicationDetailPage.tsx` — view + edit inline or modal
-  - [ ] Create `admin-ui/src/components/ApplicationForm.tsx` — shared form for create/edit
-  - [ ] Add `/applications` and `/applications/:id` routes in `App.tsx`
-  - [ ] Add **Applications** entry to the left-rail navigation in `DashboardPage.tsx` (between Dashboard and Routes/Identity)
+- [x] Build Applications UI (AC: 1, 2, 3, 4)
+  - [x] Add `getApplications()`, `createApplication()`, `updateApplication()` to `admin-ui/src/services/api.ts`
+  - [x] Create `admin-ui/src/pages/ApplicationsPage.tsx` — list with "Add Application" CTA
+  - [x] Create `admin-ui/src/pages/ApplicationDetailPage.tsx` — view + edit inline or modal
+  - [x] Create `admin-ui/src/components/ApplicationForm.tsx` — shared form for create/edit
+  - [x] Add `/applications` and `/applications/:id` routes in `App.tsx`
+  - [x] Add **Applications** entry to the left-rail navigation in `DashboardPage.tsx` (between Dashboard and Routes/Identity)
 
-- [ ] Add integration tests (AC: 2, 3, 4)
-  - [ ] `create_application` succeeds and persists
-  - [ ] `list_applications` returns created application after restart simulation
-  - [ ] `update_application` updates fields correctly
-  - [ ] Unauthenticated requests to `/api/applications` return 401
+- [x] Add integration tests (AC: 2, 3, 4)
+  - [x] `create_application` succeeds and persists
+  - [x] `list_applications` returns created application after restart simulation
+  - [x] `update_application` updates fields correctly
+  - [x] Unauthenticated requests to `/api/applications` return 401
 
-- [ ] Update documentation (AC: 1)
-  - [ ] Document Applications CRUD in README or DOCKER.md
-  - [ ] Note wildcard hostname requirement
+- [x] Update documentation (AC: 1)
+  - [x] Document Applications CRUD in README or DOCKER.md
+  - [x] Note wildcard hostname requirement
 
 ## Dev Notes
 
@@ -414,11 +414,49 @@ async fn test_duplicate_hostname_returns_409()        { ... } // Unique constrai
 
 ### Agent Model Used
 
-_to be filled by dev agent_
+Claude Sonnet 4.6 (GitHub Copilot — bmad-agent-bmm-dev mode)
 
 ### Debug Log References
 
+- `axum::body::to_bytes` requires 2 args in axum 0.7 (limit: `usize::MAX`); `hyper::body::to_bytes` is removed in hyper v1 — fixed in both test files.
+- Unit test `test_validate_upstream_url_no_host` required `"http://"` not `"http:///path"` — url crate v2 (WHATWG) treats triple-slash as valid empty-host.
+- Integration tests raced on shared `admins` table across test binaries — fixed with `serial_test` `#[file_serial]` (requires `features = ["file_locks"]`) in both `auth_flow.rs` and `applications_flow.rs`.
+
 ### Completion Notes List
+
+- All 21 shared unit tests pass (`cargo test -p shared`).
+- All 6 applications_flow integration tests pass.
+- All 8 auth_flow regression tests pass (no regressions).
+- `serial_test = { version = "3", features = ["file_locks"] }` added to control-plane dev-dependencies.
+- Documentation added to README.md (Applications CRUD section).
 
 ### File List
 
+**New files:**
+- `migrations/20260309000001_create_applications.sql`
+- `crates/shared/src/models/application.rs`
+- `crates/control-plane/src/api/applications.rs`
+- `crates/control-plane/tests/applications_flow.rs`
+- `admin-ui/src/components/ApplicationForm.tsx`
+- `admin-ui/src/pages/ApplicationsPage.tsx`
+- `admin-ui/src/pages/ApplicationDetailPage.tsx`
+
+**Modified files:**
+- `crates/shared/Cargo.toml` — added `url = { version = "2", features = ["serde"] }`
+- `crates/shared/src/models/mod.rs` — added `pub mod application; pub use application::*;`
+- `crates/control-plane/Cargo.toml` — added `serial_test = { version = "3", features = ["file_locks"] }` to dev-dependencies
+- `crates/control-plane/src/api/auth.rs` — made `ADMIN_SESSION_KEY` `pub(crate)`, added `require_auth()` helper
+- `crates/control-plane/src/api/setup.rs` — added `ApplicationError` variant to `AppError` + `From` impl + `IntoResponse` arms
+- `crates/control-plane/src/api/mod.rs` — added `pub mod applications; pub use applications::*;`
+- `crates/control-plane/src/main.rs` — registered 2 new routes for `/api/applications`
+- `crates/control-plane/tests/auth_flow.rs` — fixed `hyper::body::to_bytes` → `axum::body::to_bytes`, added `#[file_serial]`
+- `admin-ui/src/services/api.ts` — added Application types and 3 API functions
+- `admin-ui/src/App.tsx` — added `/applications` and `/applications/:id` routes
+- `admin-ui/src/pages/DashboardPage.tsx` — added Applications nav item + routing
+- `README.md` — added Applications CRUD section
+
+### Change Log
+
+| Date | Change |
+|------|--------|
+| 2026-03-10 | Initial implementation (Tasks 1–6): migration, shared model, API endpoints, admin UI, integration tests, docs |

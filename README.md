@@ -123,6 +123,14 @@ npm test      # run Vitest + Testing Library tests
 - `POST /api/auth/logout` - Destroy session
 - `GET /api/auth/me` - Get current authenticated admin
 
+**Applications (auth required):**
+- `POST /api/applications` - Register a new upstream application
+- `GET /api/applications` - List all registered applications
+- `GET /api/applications/:id` - Get a single application by ID
+- `PUT /api/applications/:id` - Update name, upstream URL, or hostname
+
+> **Hostname uniqueness**: each application must have a distinct `hostname` value (enforced by a unique DB constraint). The hostname is the external-facing domain under your wildcard certificate that the gateway will route to this upstream.
+
 ## Docker Compose Deployment
 
 ## Docker Compose Deployment

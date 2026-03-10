@@ -33,3 +33,4 @@ time = "0.3"
 [dev-dependencies]
 hyper = "1"
 tower = "0.5"
+serial_test = { version = "3", features = ["file_locks"] }

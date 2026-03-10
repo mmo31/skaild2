@@ -1,3 +1,4 @@
+use shared::ApplicationError;
 use axum::{
     extract::State,
     http::StatusCode,
@@ -95,6 +96,7 @@ pub async fn create_first_admin(
 #[derive(Debug)]
 pub enum AppError {
     AdminError(AdminError),
+    ApplicationError(ApplicationError),
     DatabaseError(String),
     SetupAlreadyComplete,
     SessionError(String),
@@ -104,6 +106,12 @@ pub enum AppError {
 impl From<AdminError> for AppError {
     fn from(err: AdminError) -> Self {
         AppError::AdminError(err)
+    }
+}
+
+impl From<ApplicationError> for AppError {
+    fn from(err: ApplicationError) -> Self {
+        AppError::ApplicationError(err)
     }
 }
 
@@ -132,6 +140,24 @@ impl IntoResponse for AppError {
                 (StatusCode::UNAUTHORIZED, "Invalid credentials")
             }
             AppError::AdminError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+            }
+            AppError::ApplicationError(ApplicationError::NameRequired) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, "Application name is required")
+            }
+            AppError::ApplicationError(ApplicationError::InvalidUpstreamUrl(_)) => {
+                (StatusCode::BAD_REQUEST, "Upstream URL is invalid")
+            }
+            AppError::ApplicationError(ApplicationError::HostnameRequired) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, "Hostname is required")
+            }
+            AppError::ApplicationError(ApplicationError::HostnameConflict) => {
+                (StatusCode::CONFLICT, "Hostname is already in use")
+            }
+            AppError::ApplicationError(ApplicationError::NotFound) => {
+                (StatusCode::NOT_FOUND, "Application not found")
+            }
+            AppError::ApplicationError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
             }
             AppError::DatabaseError(_) => {

@@ -8,7 +8,16 @@ use uuid::Uuid;
 
 use crate::{api::setup::AppError, state::AppState};
 
-const ADMIN_SESSION_KEY: &str = "admin_id";
+pub(crate) const ADMIN_SESSION_KEY: &str = "admin_id";
+
+/// Extract and validate the session admin_id, returning Unauthorized if absent.
+pub async fn require_auth(session: &Session) -> Result<Uuid, AppError> {
+    session
+        .get::<Uuid>(ADMIN_SESSION_KEY)
+        .await
+        .map_err(|e| AppError::SessionError(e.to_string()))?
+        .ok_or(AppError::Unauthorized)
+}
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -66,12 +75,7 @@ pub async fn me(
     State(state): State<AppState>,
     session: Session,
 ) -> Result<Json<AuthResponse>, AppError> {
-    // Get admin ID from session
-    let admin_id: Uuid = session
-        .get(ADMIN_SESSION_KEY)
-        .await
-        .map_err(|e| AppError::SessionError(e.to_string()))?
-        .ok_or(AppError::Unauthorized)?;
+    let admin_id = require_auth(&session).await?;
     
     // Fetch admin from database
     let admin: shared::Admin = sqlx::query_as(

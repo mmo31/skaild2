@@ -1,8 +1,9 @@
 use axum::{
-    body::Body,
+    body::{Body, to_bytes},
     http::{Request, StatusCode, header},
 };
 use serde_json::json;
+use serial_test::file_serial;
 use tower::util::ServiceExt;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions::MemoryStore;
@@ -51,6 +52,7 @@ async fn create_test_app() -> (axum::Router, sqlx::PgPool) {
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_setup_status_no_admins() {
     let (app, _pool) = create_test_app().await;
     
@@ -66,13 +68,14 @@ async fn test_setup_status_no_admins() {
     
     assert_eq!(response.status(), StatusCode::OK);
     
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     
     assert_eq!(json["setup_complete"], false);
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_create_first_admin_success() {
     let (app, pool) = create_test_app().await;
     
@@ -96,7 +99,7 @@ async fn test_create_first_admin_success() {
     
     assert_eq!(response.status(), StatusCode::OK);
     
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     
     assert_eq!(json["email"], "admin@example.com");
@@ -113,6 +116,7 @@ async fn test_create_first_admin_success() {
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_me_requires_authentication() {
     let (app, _pool) = create_test_app().await;
 
@@ -130,6 +134,7 @@ async fn test_me_requires_authentication() {
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_login_and_me_and_logout_flow() {
     let (app, _pool) = create_test_app().await;
 
@@ -234,6 +239,7 @@ async fn test_login_and_me_and_logout_flow() {
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_login_with_invalid_credentials_fails() {
     let (app, _pool) = create_test_app().await;
 
@@ -279,6 +285,7 @@ async fn test_login_with_invalid_credentials_fails() {
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_create_admin_with_weak_password() {
     let (app, _pool) = create_test_app().await;
     
@@ -302,13 +309,14 @@ async fn test_create_admin_with_weak_password() {
     
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     
     assert!(json["error"].as_str().unwrap().contains("12 characters"));
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_create_admin_twice_fails() {
     let (app, _pool) = create_test_app().await;
     
@@ -347,13 +355,14 @@ async fn test_create_admin_twice_fails() {
     
     assert_eq!(response2.status(), StatusCode::BAD_REQUEST);
     
-    let body = hyper::body::to_bytes(response2.into_body()).await.unwrap();
+    let body = to_bytes(response2.into_body(), usize::MAX).await.unwrap();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     
     assert!(json["error"].as_str().unwrap().contains("already complete"));
 }
 
 #[tokio::test]
+#[file_serial]
 async fn test_setup_status_with_admin() {
     let (app, _pool) = create_test_app().await;
     
@@ -390,7 +399,7 @@ async fn test_setup_status_with_admin() {
     
     assert_eq!(response.status(), StatusCode::OK);
     
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     
     assert_eq!(json["setup_complete"], true);

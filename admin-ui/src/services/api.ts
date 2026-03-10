@@ -67,4 +67,43 @@ export const getCurrentAdmin = async (): Promise<AdminResponse> => {
   return response.data;
 };
 
+// Applications API
+
+export interface Application {
+  id: string;
+  name: string;
+  upstream_url: string;
+  hostname: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateApplicationInput {
+  name: string;
+  upstream_url: string;
+  hostname: string;
+}
+
+export interface UpdateApplicationInput {
+  name?: string;
+  upstream_url?: string;
+  hostname?: string;
+}
+
+export const getApplications = async (): Promise<Application[]> => {
+  const response = await api.get<Application[]>('/api/applications');
+  return response.data;
+};
+
+export const createApplication = async (data: CreateApplicationInput): Promise<Application> => {
+  const response = await api.post<Application>('/api/applications', data);
+  return response.data;
+};
+
+export const updateApplication = async (id: string, data: UpdateApplicationInput): Promise<Application> => {
+  const response = await api.put<Application>(`/api/applications/${id}`, data);
+  return response.data;
+};
+
 export default api;
