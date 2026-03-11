@@ -55,8 +55,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("Session management configured");
 
+    // Create HTTP client for outbound requests (connection tests)
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .redirect(reqwest::redirect::Policy::limited(3))
+        .build()
+        .expect("Failed to build reqwest client");
+
     // Create application state
-    let app_state = AppState::new(pool);
+    let app_state = AppState::new(pool, http_client);
 
     // Configure CORS - allow admin UI origin
     let frontend_origin = std::env::var("FRONTEND_URL")
@@ -106,6 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Route endpoints
         .route("/api/applications/:app_id/routes", get(api::list_routes).post(api::create_route))
         .route("/api/routes/:id", get(api::get_route).put(api::update_route))
+        .route("/api/routes/:id/test", post(api::test_route))
         // Internal gateway endpoint (no auth)
         .route("/api/internal/routes", get(api::get_internal_routes))
         .layer(cors)

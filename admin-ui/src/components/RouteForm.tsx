@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { CreateRouteInput } from '../services/api';
+import { CreateRouteInput, UpdateRouteInput } from '../services/api';
+
+interface RouteFormInitial {
+  host: string;
+  path_prefix: string;
+  access_mode: 'public' | 'login_required';
+  enabled: boolean;
+}
 
 interface RouteFormProps {
   applicationHostname: string;
-  onSubmit: (data: CreateRouteInput) => Promise<void>;
+  initial?: RouteFormInitial;
+  onSubmit: (data: CreateRouteInput | UpdateRouteInput) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
   error?: string;
@@ -11,14 +19,17 @@ interface RouteFormProps {
 
 export const RouteForm: React.FC<RouteFormProps> = ({
   applicationHostname,
+  initial,
   onSubmit,
   onCancel,
   loading = false,
   error = '',
 }) => {
-  const [host, setHost] = useState(applicationHostname);
-  const [pathPrefix, setPathPrefix] = useState('/');
-  const [accessMode, setAccessMode] = useState<'public' | 'login_required'>('login_required');
+  const isEdit = !!initial;
+  const [host, setHost] = useState(initial?.host ?? applicationHostname);
+  const [pathPrefix, setPathPrefix] = useState(initial?.path_prefix ?? '/');
+  const [accessMode, setAccessMode] = useState<'public' | 'login_required'>(initial?.access_mode ?? 'login_required');
+  const [enabled, setEnabled] = useState(initial?.enabled ?? true);
   const [fieldError, setFieldError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,13 +40,12 @@ export const RouteForm: React.FC<RouteFormProps> = ({
       return;
     }
     try {
-      await onSubmit({
-        host: host.trim(),
-        path_prefix: pathPrefix.trim() || '/',
-        access_mode: accessMode,
-      });
+      const data = isEdit
+        ? { host: host.trim(), path_prefix: pathPrefix.trim() || '/', access_mode: accessMode, enabled }
+        : { host: host.trim(), path_prefix: pathPrefix.trim() || '/', access_mode: accessMode };
+      await onSubmit(data);
     } catch {
-      // error display is managed by the parent via addRouteError state
+      // error display is managed by the parent
     }
   };
 
@@ -103,6 +113,23 @@ export const RouteForm: React.FC<RouteFormProps> = ({
         </div>
       </div>
 
+      {isEdit && (
+        <div>
+          <label className="block text-xs text-slate-400 uppercase tracking-wide mb-2">
+            Status
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={(e) => setEnabled(e.target.checked)}
+              className="accent-accent-aqua w-4 h-4"
+            />
+            <span className="text-slate-200 text-sm">Enabled</span>
+          </label>
+        </div>
+      )}
+
       {(fieldError || error) && (
         <p className="text-red-400 text-sm">{fieldError || error}</p>
       )}
@@ -113,7 +140,7 @@ export const RouteForm: React.FC<RouteFormProps> = ({
           disabled={loading}
           className="mc-button-primary px-4 py-2 text-sm disabled:opacity-50"
         >
-          {loading ? 'Saving…' : 'Save Route'}
+          {loading ? 'Saving…' : isEdit ? 'Update Route' : 'Save Route'}
         </button>
         <button
           type="button"

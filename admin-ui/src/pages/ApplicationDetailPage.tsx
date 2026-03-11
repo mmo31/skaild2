@@ -4,10 +4,14 @@ import {
   Application,
   Route,
   CreateRouteInput,
+  UpdateRouteInput,
+  ConnectionTestResult,
   getApplications,
   updateApplication,
   getRoutes,
   createRoute,
+  updateRoute,
+  testRoute,
 } from '../services/api';
 import { ApplicationForm } from '../components/ApplicationForm';
 import { RouteForm } from '../components/RouteForm';
@@ -28,6 +32,10 @@ export const ApplicationDetailPage: React.FC = () => {
   const [addingRoute, setAddingRoute] = useState(false);
   const [addRouteLoading, setAddRouteLoading] = useState(false);
   const [addRouteError, setAddRouteError] = useState('');
+  const [testResults, setTestResults] = useState<Record<string, ConnectionTestResult | 'loading'>>({});
+  const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
+  const [editRouteLoading, setEditRouteLoading] = useState(false);
+  const [editRouteError, setEditRouteError] = useState('');
 
   useEffect(() => {
     // Fetch by id from the list endpoint (no single GET added to api.ts per story scope)
@@ -77,6 +85,42 @@ export const ApplicationDetailPage: React.FC = () => {
       throw err;
     } finally {
       setAddRouteLoading(false);
+    }
+  };
+
+  const handleUpdateRoute = async (routeId: string, data: UpdateRouteInput) => {
+    setEditRouteLoading(true);
+    setEditRouteError('');
+    try {
+      const updated = await updateRoute(routeId, data);
+      setRoutes((prev) => prev.map((r) => (r.id === routeId ? updated : r)));
+      setEditingRouteId(null);
+    } catch (err: any) {
+      console.error('updateRoute error', err.response?.status, err.response?.data, err.message);
+      setEditRouteError(
+        err.response?.data?.error ||
+        (err.response?.status ? `Server error ${err.response.status}` : err.message) ||
+        'Failed to update route'
+      );
+    } finally {
+      setEditRouteLoading(false);
+    }
+  };
+
+  const handleTestRoute = async (routeId: string) => {
+    setTestResults((prev) => ({ ...prev, [routeId]: 'loading' }));
+    try {
+      const result = await testRoute(routeId);
+      setTestResults((prev) => ({ ...prev, [routeId]: result }));
+    } catch {
+      setTestResults((prev) => ({
+        ...prev,
+        [routeId]: {
+          status: 'error',
+          error_kind: 'error',
+          error_message: 'Request failed',
+        },
+      }));
     }
   };
 
@@ -192,12 +236,17 @@ export const ApplicationDetailPage: React.FC = () => {
                 <th className="pb-2 pr-4">Host</th>
                 <th className="pb-2 pr-4">Path Prefix</th>
                 <th className="pb-2 pr-4">Access Mode</th>
-                <th className="pb-2">Status</th>
+                <th className="pb-2 pr-4">Status</th>
+                <th className="pb-2">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
-              {routes.map((route) => (
-                <tr key={route.id}>
+              {routes.map((route) => {
+                const testResult = testResults[route.id];
+                const isEditingThis = editingRouteId === route.id;
+                return (
+                <React.Fragment key={route.id}>
+                <tr className={isEditingThis ? 'opacity-50' : ''}>
                   <td className="py-2.5 pr-4 font-mono text-slate-200">{route.host}</td>
                   <td className="py-2.5 pr-4 font-mono text-slate-300">{route.path_prefix}</td>
                   <td className="py-2.5 pr-4">
@@ -209,7 +258,7 @@ export const ApplicationDetailPage: React.FC = () => {
                       {route.access_mode === 'public' ? 'Public' : 'Login required'}
                     </span>
                   </td>
-                  <td className="py-2.5">
+                  <td className="py-2.5 pr-4">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       route.enabled
                         ? 'bg-green-500/20 text-green-400'
@@ -218,8 +267,76 @@ export const ApplicationDetailPage: React.FC = () => {
                       {route.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </td>
+                  <td className="py-2.5">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => handleTestRoute(route.id)}
+                          disabled={testResult === 'loading' || isEditingThis}
+                          className="mc-button-primary px-2 py-1 text-xs disabled:opacity-50"
+                        >
+                          {testResult === 'loading' ? 'Testing…' : 'Test'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingRouteId(isEditingThis ? null : route.id);
+                            setEditRouteError('');
+                          }}
+                          className={`px-2 py-1 text-xs rounded border transition ${
+                            isEditingThis
+                              ? 'border-slate-500 text-slate-300 bg-slate-700/50'
+                              : 'border-slate-600 text-slate-300 hover:border-slate-400 hover:text-slate-100'
+                          }`}
+                        >
+                          {isEditingThis ? 'Cancel' : 'Edit'}
+                        </button>
+                      </div>
+                      {testResult && testResult !== 'loading' && (
+                        <div className="flex flex-col gap-0.5">
+                          {testResult.status === 'ok' ? (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                              ✓ Reachable (HTTP {testResult.http_status}){testResult.latency_ms != null ? ` · ${testResult.latency_ms}ms` : ''}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">
+                              ✗ {testResult.error_message}
+                            </span>
+                          )}
+                          {testResult.auth_check && !testResult.auth_check.configured && (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                              ⚠ No IdP configured
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              ))}
+                {isEditingThis && (
+                  <tr>
+                    <td colSpan={5} className="pb-3 pt-1">
+                      <div className="border border-slate-600/50 rounded-lg p-4 bg-slate-800/30">
+                        <h3 className="text-sm font-medium text-slate-300 mb-3">Edit Route</h3>
+                        <RouteForm
+                          applicationHostname={application.hostname}
+                          initial={{
+                            host: route.host,
+                            path_prefix: route.path_prefix,
+                            access_mode: route.access_mode,
+                            enabled: route.enabled,
+                          }}
+                          onSubmit={(data) => handleUpdateRoute(route.id, data as UpdateRouteInput)}
+                          onCancel={() => { setEditingRouteId(null); setEditRouteError(''); }}
+                          loading={editRouteLoading}
+                          error={editRouteError}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         )}

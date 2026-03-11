@@ -32,7 +32,7 @@ async fn create_test_app() -> (axum::Router, sqlx::PgPool) {
     .await
     .expect("Failed to create test admin");
 
-    let state = control_plane::state::AppState::new(pool.clone());
+    let state = control_plane::state::AppState::new(pool.clone(), reqwest::Client::new());
     let session_store = MemoryStore::default();
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)

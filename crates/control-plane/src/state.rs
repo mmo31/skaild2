@@ -4,10 +4,11 @@ use shared::db::DbPool;
 #[derive(Clone)]
 pub struct AppState {
     pub db_pool: DbPool,
+    pub http_client: reqwest::Client,
 }
 
 impl AppState {
-    pub fn new(db_pool: DbPool) -> Self {
-        Self { db_pool }
+    pub fn new(db_pool: DbPool, http_client: reqwest::Client) -> Self {
+        Self { db_pool, http_client }
     }
 }

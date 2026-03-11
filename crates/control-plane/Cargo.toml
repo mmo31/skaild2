@@ -29,8 +29,10 @@ tower-sessions = "0.11"
 tower-sessions-redis-store = "0.11"
 redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
 time = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 
 [dev-dependencies]
 hyper = "1"
 tower = "0.5"
 serial_test = { version = "3", features = ["file_locks"] }
+wiremock = "0.6"

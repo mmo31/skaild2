@@ -269,6 +269,27 @@ pub async fn list_all_enabled_routes_with_upstream(
     .map_err(|e| RouteError::DatabaseError(e.to_string()))
 }
 
+/// Get a single route with its application's upstream_url by route id.
+/// No `enabled` filter — admins can test disabled routes.
+pub async fn get_route_with_upstream_by_id(
+    pool: &crate::db::DbPool,
+    id: Uuid,
+) -> Result<RouteWithUpstream, RouteError> {
+    sqlx::query_as::<_, RouteWithUpstream>(
+        r#"
+        SELECT r.id, r.host, r.path_prefix, r.access_mode, a.upstream_url
+        FROM routes r
+        JOIN applications a ON a.id = r.application_id
+        WHERE r.id = $1
+        "#,
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| RouteError::DatabaseError(e.to_string()))?
+    .ok_or(RouteError::NotFound)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

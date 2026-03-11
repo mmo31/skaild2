@@ -147,4 +147,25 @@ export const updateRoute = async (id: string, data: UpdateRouteInput): Promise<R
   return response.data;
 };
 
+// Connection Test API
+
+export interface AuthCheckResult {
+  configured: boolean;
+  message: string;
+}
+
+export interface ConnectionTestResult {
+  status: 'ok' | 'error';
+  http_status?: number;
+  latency_ms?: number;
+  error_kind?: string;
+  error_message?: string;
+  auth_check?: AuthCheckResult | null;
+}
+
+export const testRoute = async (routeId: string): Promise<ConnectionTestResult> => {
+  const response = await api.post<ConnectionTestResult>(`/api/routes/${routeId}/test`);
+  return response.data;
+};
+
 export default api;

@@ -110,10 +110,13 @@ async fn proxy_handler(State(state): State<AppState>, req: Request) -> Response 
         .map(|pq| pq.as_str().to_string())
         .unwrap_or_else(|| "/".to_string());
 
+    tracing::debug!("Incoming request: host={} path={}", host, path);
+
     let routes = state.routes.read().await;
     let matched = match_route(&routes, &host, &path);
 
     let Some(route) = matched else {
+        tracing::warn!("No route matched: host={} path={}", host, path);
         return (
             StatusCode::NOT_FOUND,
             axum::Json(serde_json::json!({"error": "No route found"})),
@@ -136,6 +139,7 @@ async fn proxy_handler(State(state): State<AppState>, req: Request) -> Response 
                 route.upstream_url.trim_end_matches('/'),
                 path_and_query
             );
+            tracing::info!("Proxying {} {} -> {}", host, path, target_url);
             drop(routes); // release read lock before async I/O
             forward_request(state.client, req, &target_url).await
         }

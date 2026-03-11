@@ -20,6 +20,12 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
+    extra_hosts:
+      # Allows upstream URLs like http://host.docker.internal:<port> to reach
+      # services running on the WSL2/host machine (e.g. local dev apps).
+      # On Docker Desktop this hostname already exists; this line ensures it
+      # also works with Docker Engine directly on Linux/WSL2.
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     environment:
@@ -42,6 +48,9 @@ services:
         condition: service_healthy
     ports:
       - "0.0.0.0:8080:8080"
+    extra_hosts:
+      # Same as gateway — allows connection-test to reach host services via host.docker.internal
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     environment:

@@ -5,6 +5,7 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 use tower_sessions::Session;
 use uuid::Uuid;
 
@@ -174,4 +175,93 @@ pub async fn get_internal_routes(
 ) -> Result<Json<Vec<InternalRouteEntry>>, AppError> {
     let routes = shared::list_all_enabled_routes_with_upstream(&state.db_pool).await?;
     Ok(Json(routes.into_iter().map(InternalRouteEntry::from).collect()))
+}
+
+// ── Connection test ───────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize)]
+pub struct AuthCheckResult {
+    pub configured: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ConnectionTestResult {
+    pub status: String,
+    pub http_status: Option<u16>,
+    pub latency_ms: Option<u64>,
+    pub error_kind: Option<String>,
+    pub error_message: Option<String>,
+    pub auth_check: Option<AuthCheckResult>,
+}
+
+fn classify_error(err: &reqwest::Error) -> (String, String) {
+    let msg = err.to_string().to_lowercase();
+    if err.is_timeout() {
+        ("timeout".to_string(), "Connection timed out after 5 seconds".to_string())
+    } else if err.is_connect() {
+        if msg.contains("dns") || msg.contains("failed to lookup") || msg.contains("resolve") {
+            let host = err.url()
+                .map(|u| u.host_str().unwrap_or("unknown").to_string())
+                .unwrap_or_else(|| "unknown".to_string());
+            ("dns".to_string(), format!("DNS resolution failed for host '{host}'"))
+        } else if msg.contains("tls") || msg.contains("certificate") || msg.contains("handshake") || msg.contains("ssl") {
+            ("tls".to_string(), "TLS certificate validation failed".to_string())
+        } else {
+            ("connection".to_string(), "Connection refused or host unreachable".to_string())
+        }
+    } else {
+        ("error".to_string(), format!("Request failed: {}", err))
+    }
+}
+
+/// POST /api/routes/:id/test — run a connection test for a route (auth required)
+pub async fn test_route(
+    session: Session,
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<ConnectionTestResult>, AppError> {
+    require_auth(&session).await?;
+
+    let route = shared::get_route_with_upstream_by_id(&state.db_pool, id).await?;
+
+    // Build test URL: upstream_url (no trailing slash by convention) + path_prefix (starts with /)
+    let test_url = format!("{}{}", route.upstream_url.trim_end_matches('/'), route.path_prefix);
+
+    let start = Instant::now();
+    let response = state.http_client.get(&test_url).send().await;
+    let elapsed_ms = start.elapsed().as_millis() as u64;
+
+    let auth_check = if route.access_mode == "login_required" {
+        Some(AuthCheckResult {
+            configured: false,
+            message: "No identity provider configured — set one up in Epic 3 to enable auth validation".to_string(),
+        })
+    } else {
+        None
+    };
+
+    let result = match response {
+        Ok(resp) => ConnectionTestResult {
+            status: "ok".to_string(),
+            http_status: Some(resp.status().as_u16()),
+            latency_ms: Some(elapsed_ms),
+            error_kind: None,
+            error_message: None,
+            auth_check,
+        },
+        Err(err) => {
+            let (kind, message) = classify_error(&err);
+            ConnectionTestResult {
+                status: "error".to_string(),
+                http_status: None,
+                latency_ms: Some(elapsed_ms),
+                error_kind: Some(kind),
+                error_message: Some(message),
+                auth_check,
+            }
+        }
+    };
+
+    Ok(Json(result))
 }
